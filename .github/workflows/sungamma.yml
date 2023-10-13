@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [sungamma]
+        target: [Lean]
 
     steps:
     - name: Checkout
