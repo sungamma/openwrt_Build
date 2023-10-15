@@ -107,7 +107,7 @@ jobs:
         sed -i "s/%D %V, %C/openwrt $(date +'%m.%d') by kenzo/g" package/base-files/files/etc/banner
         sed -i 's/luci-theme-bootstrap/luci-theme-argone/g' feeds/luci/collections/luci/Makefile
         ./scripts/feeds update -a && ./scripts/feeds install -a
-        cp -f ../$CONFIG_FILE .config && md5sum .config &&  make defconfig && md5sum.config
+        cp -f ../$CONFIG_FILE .config && md5sum .config &&  make defconfig && md5sum .config
         
     - name: Download package
       working-directory: ./openwrt
