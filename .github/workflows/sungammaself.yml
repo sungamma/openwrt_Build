@@ -4,10 +4,10 @@
 # Author: kenzo
 #=================================================
 
-name: sungamma
+name: sungammaself
 
 on:
-  push:
+  # push:
   repository_dispatch:
   workflow_dispatch:
     inputs:
@@ -16,8 +16,8 @@ on:
         required: false
         default: 'false'
 
-  schedule:
-    - cron: 0 0 * * 5
+  # schedule:
+  #   - cron: 0 0 * * 5
 
 env:
   UPLOAD_BIN_DIR: false
