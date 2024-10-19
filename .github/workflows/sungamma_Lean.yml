@@ -4,7 +4,7 @@
 # Author: kenzo
 #=================================================
 
-name: sungamma
+name: sungamma_Lean
 
 on:
   push:
@@ -16,8 +16,8 @@ on:
         required: false
         default: 'false'
 
-  schedule:
-    - cron: 0 0 * * 5
+  # schedule:
+  #   - cron: 0 0 * * 5
 
 env:
   UPLOAD_BIN_DIR: false
@@ -30,7 +30,7 @@ env:
   REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
   REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
   DOCKER_ID: ${{ secrets.DOCKER_ID }}
-  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}  
+  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}
   TZ: Asia/Shanghai
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [sungamma]
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@main
@@ -64,7 +64,7 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
-        
+
     - name: Get current date
       id: date
       run: |
@@ -74,9 +74,9 @@ jobs:
         echo "DOCKERTAG=${{ secrets.DOCKER_ID }}/openwrt-6p:latest" >> $GITHUB_ENV
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
-        
+
     - name: Clone source code
-      env: 
+      env:
         REPO_URL: https://github.com/coolsnowwolf/lede
         REPO_BRANCH: master
       run: |
@@ -112,13 +112,13 @@ jobs:
         sed -i 's/luci-theme-bootstrap/luci-theme-argone/g' feeds/luci/collections/luci/Makefile
         ./scripts/feeds update -a && ./scripts/feeds install -a
         cp -f ../$CONFIG_FILE .config && md5sum .config &&  make defconfig && md5sum .config
-        
+
     - name: Download package
       working-directory: ./openwrt
       run: |
         make download -j$(($(nproc)+1))
         find dl -size -1024c -exec rm -f {} \;
-        
+
     - name: Cache
       uses: stupidloud/cachewrtbuild@main
       with:
@@ -126,7 +126,7 @@ jobs:
         mixkey: ${{ matrix.target }}
         clean: ${{ contains(github.event.action, 'nocache') }}
         prefix: ${{ github.workspace }}/openwrt
-    
+
     - name: Check space usage
       run: |
         shopt -s extglob
@@ -168,7 +168,7 @@ jobs:
         echo ${{matrix.target}} >> version.txt
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        
+
 
     - name: Generate release tag
       id: tag
