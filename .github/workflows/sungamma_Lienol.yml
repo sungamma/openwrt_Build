@@ -5,7 +5,7 @@
 # Modified by: sungamma
 #=================================================
 
-name: sungamma
+name: sungamma_lienol
 
 on:
   repository_dispatch:
