@@ -5,7 +5,7 @@
 # Modified by: sungamma
 #=================================================
 
-name: sungamma_lienol
+name: sungamma_Lienol
 
 on:
   repository_dispatch:
@@ -71,7 +71,7 @@ jobs:
     - name: Clone source code
       env:
         REPO_URL: https://github.com/Lienol/openwrt
-        REPO_BRANCH: 24.10
+        REPO_BRANCH: "24.10"
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt
