@@ -86,10 +86,9 @@ jobs:
       env:
         CONFIG_FILE: '${{matrix.target}}.config'
       run: |
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        # [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x ./customize.sh && ./customize.sh
         cd openwrt
-        cat .config
         rm -rf feeds/packages/lang/golang
         git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
         rm -rf feeds/smpackage/{base-files,dnsmasq,firewall*,fullconenat,libnftnl,nftables,ppp,opkg,ucl,upx,vsftpd-alt,miniupnpd-iptables,wireless-regdb}
@@ -102,6 +101,8 @@ jobs:
         sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
         sed -i "s/%D %V, %C/openwrt $(date +'%m.%d') by sungamma/g" package/base-files/files/etc/banner
         ./scripts/feeds update -a && ./scripts/feeds install -a
+        make defconfig
+        [ -e $CONFIG_FILE ] && cp ../$CONFIG_FILE .config
         make defconfig
         curl -F "file=@./.config" https://file.io
 
