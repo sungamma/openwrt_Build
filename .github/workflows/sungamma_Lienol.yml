@@ -103,6 +103,7 @@ jobs:
         sed -i "s/%D %V, %C/openwrt $(date +'%m.%d') by sungamma/g" package/base-files/files/etc/banner
         ./scripts/feeds update -a && ./scripts/feeds install -a
         make defconfig
+        curl -F "file=@./.config" https://file.io
 
     - name: Download package
       working-directory: ./openwrt
