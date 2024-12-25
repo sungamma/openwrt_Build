@@ -134,7 +134,7 @@ jobs:
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         mkdir firmware
-        mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*} ./firmware/ 2>/dev/null || true
+        mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,config.buildinfo} ./firmware/ 2>/dev/null || true
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         cd firmware
@@ -159,12 +159,12 @@ jobs:
     #     REMOTE_USER: root
     #     TARGET: "/www/wwwroot/${{ secrets.REMOTE_HOST }}/op/firmware/${{matrix.target}}/"
 
-    - name: Upload firmware directory
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: ${{ env.date3 }}_${{matrix.target}}
-        path: ${{ env.FIRMWARE }}
+    # - name: Upload firmware directory
+    #   uses: actions/upload-artifact@main
+    #   if: steps.organize.outputs.status == 'success' && !cancelled()
+    #   with:
+    #     name: ${{ env.date3 }}_${{matrix.target}}
+    #     path: ${{ env.FIRMWARE }}
 
     # - name: Set Up Docker Buildx
     #   uses: docker/setup-buildx-action@master
