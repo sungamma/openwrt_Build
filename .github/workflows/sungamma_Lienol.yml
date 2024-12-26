@@ -240,9 +240,15 @@ jobs:
     #       ${{ secrets.DOCKER_ID }}/openwrt-6p:${{matrix.target}}
     #       ${{ env.DOCKERTAG }}
 
+    - name: Test
+      if: steps.compile.outputs.status == 'success' && !cancelled()
+      run: |
+        echo "Test"
+
     - name: Upload firmware to Wsstransfer
       id: wsstransfer
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_WSSTRANSFER == 'true' && !cancelled()
+      if: env.UPLOAD_WSSTRANSFER == 'true' && !cancelled()
+      # if: steps.organize.outputs.status == 'success' && env.UPLOAD_WSSTRANSFER == 'true' && !cancelled()
       run: |
         curl -fsSL git.io/file-transfer | sh
         ./transfer wss --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee wsstransfer.log
@@ -251,7 +257,8 @@ jobs:
 
     - name: Upload firmware to LitTransfer
       id: litransfer
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_LITTRANSFER == 'true' && !cancelled()
+      if: env.UPLOAD_LITTRANSFER == 'true' && !cancelled()
+      # if: steps.organize.outputs.status == 'success' && env.UPLOAD_LITTRANSFER == 'true' && !cancelled()
       run: |
         curl -fsSL git.io/file-transfer | sh
         ./transfer lit --no-progress ${FIRMWARE} 2>&1 | tee littransfer.log
