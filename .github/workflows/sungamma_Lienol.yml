@@ -93,12 +93,6 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         df -hT
 
-    # - name: Combine Disks 貌似没有用
-    #   uses: easimon/maximize-build-space@master
-    #   with:
-    #     swap-size-mb: 1024
-    #     temp-reserve-mb: 100
-    #     root-reserve-mb: 1024
 
     - name: Get current date
       id: date
@@ -138,7 +132,7 @@ jobs:
       run: |
         # [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         # chmod +x ./customize.sh && ./customize.sh
-        sed -i 's/192.168.1.1/192.168.234.2/g' openwrt/package/base-files/files/bin/config_generate
+        sed -i 's/192.168.1.1/192.168.2.1/g' openwrt/package/base-files/files/bin/config_generate
         cd openwrt
         rm -rf feeds/packages/lang/golang
         git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
@@ -153,9 +147,9 @@ jobs:
         sed -i "s/%D %V, %C/openwrt $(date +'%m.%d') by sungamma/g" package/base-files/files/etc/banner
         ./scripts/feeds update -a && ./scripts/feeds install -a
         cp ../$CONFIG_FILE .config
-        cat .config
+        # cat .config
         make defconfig
-        curl -F "file=@./.config" https://file.io
+        # curl -F "file=@./.config" https://file.io
 
     - name: Download package
       working-directory: ./openwrt
@@ -242,10 +236,10 @@ jobs:
     #       ${{ secrets.DOCKER_ID }}/openwrt-6p:${{matrix.target}}
     #       ${{ env.DOCKERTAG }}
 
-    - name: Test
-      if: steps.compile.outputs.status == 'success' && !cancelled()
-      run: |
-        echo "Test"
+    # - name: Test
+    #   if: steps.compile.outputs.status == 'success' && !cancelled()
+    #   run: |
+    #     echo "Test"
 
     - name: Upload firmware to Wsstransfer
       id: wsstransfer
@@ -254,7 +248,7 @@ jobs:
       run: |
         curl -fsSL git.io/file-transfer | sh
         ./transfer wss --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee wsstransfer.log
-        echo "::warning file=wsstransfer.com::$(cat wsstransfer.log | grep https)"
+        echo "::warning file=wenshushu.cn::$(cat wsstransfer.log | grep https)"
         echo "url=$(cat wsstransfer.log | grep 'Download' | cut -f3 -d" ")" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to LitTransfer
