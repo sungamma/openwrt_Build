@@ -8,7 +8,7 @@ name: sungamma_Lean
 
 on:
   # push:
-  repository_dispatch:
+  # repository_dispatch:
   workflow_dispatch:
     inputs:
       ssh:

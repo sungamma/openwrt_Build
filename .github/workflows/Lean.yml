@@ -7,7 +7,7 @@
 name: Lean
 
 on:
-  repository_dispatch:
+  # repository_dispatch:
   workflow_dispatch:
     inputs:
       ssh:
@@ -26,7 +26,7 @@ env:
   REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
   REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
   DOCKER_ID: ${{ secrets.DOCKER_ID }}
-  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}  
+  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}
   TZ: Asia/Shanghai
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [Lean]
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@main
@@ -55,7 +55,7 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        
+
     - name: Get current date
       id: date
       run: |
@@ -65,9 +65,9 @@ jobs:
         echo "DOCKERTAG=${{ secrets.DOCKER_ID }}/openwrt-6p:latest" >> $GITHUB_ENV
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
-        
+
     - name: Clone source code
-      env: 
+      env:
         REPO_URL: https://github.com/coolsnowwolf/lede
         REPO_BRANCH: master
       run: |
@@ -104,18 +104,18 @@ jobs:
         #cp -f feeds/smpackage/.github/diy/index_x86.htm package/lean/autocore/files/x86/index.htm
         sed -i "s/%D %V, %C/openwrt $(date +'%m.%d') by kenzo/g" package/base-files/files/etc/banner
         sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
-        ./scripts/feeds update -a 
-        sed -i 's#GO_PKG_TARGET_VARS.*# #g' feeds/packages/utils/v2dat/Makefile 
+        ./scripts/feeds update -a
+        sed -i 's#GO_PKG_TARGET_VARS.*# #g' feeds/packages/utils/v2dat/Makefile
         ./scripts/feeds install -a
         cp -f feeds/smpackage/.github/diy/${{matrix.target}}.config .config && make defconfig
         sed -i 's/CONFIG_BINUTILS_VERSION="2.42"/CONFIG_BINUTILS_VERSION="2.43.1"/' .config
-        
+
     - name: Download package
       working-directory: ./openwrt
       run: |
         make download -j$(($(nproc)+1))
         find dl -size -1024c -exec rm -f {} \;
-        
+
     - name: Cache
       uses: stupidloud/cachewrtbuild@main
       with:
@@ -123,7 +123,7 @@ jobs:
         mixkey: ${{ matrix.target }}
         clean: ${{ contains(github.event.action, 'nocache') }}
         prefix: ${{ github.workspace }}/openwrt
-    
+
     - name: Check space usage
       run: |
         shopt -s extglob
@@ -164,7 +164,7 @@ jobs:
         echo ${{matrix.target}} >> version.txt
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        
+
     - name: Deploy imagebuilder to server
       uses: easingthemes/ssh-deploy@main
       with:
@@ -182,7 +182,7 @@ jobs:
       with:
         name: ${{ env.date3 }}_${{matrix.target}}
         path: ${{ env.FIRMWARE }}
-        
+
     - name: Set Up Docker Buildx
       uses: docker/setup-buildx-action@master
       if: env.DOCKER_ID && env.DOCKER_PASSWD
@@ -193,7 +193,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_ID }}
         password: ${{ secrets.DOCKER_PASSWD }}
-        
+
     - name: Build and push docker image
       uses: docker/build-push-action@master
       continue-on-error: true
@@ -205,7 +205,7 @@ jobs:
         push: true
         tags: |
           ${{ secrets.DOCKER_ID }}/openwrt-6p:${{matrix.target}}
-          ${{ env.DOCKERTAG }}        
+          ${{ env.DOCKERTAG }}
 
     - name: Upload firmware to cowtransfer
       id: cowtransfer
@@ -261,4 +261,4 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
-        
+

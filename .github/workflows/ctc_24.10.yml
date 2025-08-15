@@ -7,14 +7,14 @@
 name: openwrt_24.10
 
 on:
-  repository_dispatch:
+  # repository_dispatch:
   workflow_dispatch:
     inputs:
       ssh:
         description: 'ssh'
         required: false
         default: 'false'
-    
+
 env:
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
@@ -25,12 +25,12 @@ env:
   REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
   REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
   DOCKER_ID: ${{ secrets.DOCKER_ID }}
-  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}  
+  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}
   TZ: Asia/Shanghai
-    
+
 jobs:
   build:
-    runs-on: Ubuntu-22.04   
+    runs-on: Ubuntu-22.04
     if: github.event.repository.owner.id == github.event.sender.id
 
     name: Build ${{matrix.target}}
@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [ctc_24.10]
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@main
@@ -63,13 +63,13 @@ jobs:
         echo "date3=$(date +'%m.%d')" >> $GITHUB_ENV
         echo "DOCKERTAG=${{ secrets.DOCKER_ID }}/openwrt-6p:latest" >> $GITHUB_ENV
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
-        [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV      
+        [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
 
     - name: Clone source code
-      env: 
+      env:
         REPO_URL: https://github.com/immortalwrt/immortalwrt
         REPO_BRANCH: openwrt-24.10
-        TZ: Asia/Shanghai        
+        TZ: Asia/Shanghai
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt
@@ -88,7 +88,7 @@ jobs:
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
-        
+
     - name: Defconfig ${{matrix.target}}
       env:
         CONFIG_FILE: '${{matrix.target}}.config'
@@ -109,7 +109,7 @@ jobs:
         #cp -Rf feeds/smpackage/.github/diy/.packages/files/* files
         ./scripts/feeds update -a && ./scripts/feeds install -a
         cp -f feeds/smpackage/.github/diy/${{matrix.target}}.config .config && make defconfig
-        
+
     - name: Download package
       working-directory: ./openwrt
       run: |
@@ -121,7 +121,7 @@ jobs:
       with:
         ccache: 'true'
         prefix: ${{ github.workspace }}/openwrt
-        
+
     - name: Check space usage
       run: |
         shopt -s extglob
@@ -129,13 +129,13 @@ jobs:
         if [[ -f staging_dir/*${{ env.MTARGET }}*/bin ]]; then
             rm -rf staging_dir/!(*${{ env.MTARGET }}*|host|hostpkg) build_dir/!(*${{ env.MTARGET }}*|host|hostpkg)
         fi
-        df -hT        
+        df -hT
 
     - name: Compile the firmware
       working-directory: ./openwrt
       run: |
         echo -e "$(($(nproc)+1)) thread compile"
-        make -j$(($(nproc)+1)) || make -j1 V=s      
+        make -j$(($(nproc)+1)) || make -j1 V=s
 
     - name: Upload bin directory
       uses: actions/upload-artifact@main
@@ -159,10 +159,10 @@ jobs:
         rename -v "s/^immortalwrt/${{ env.VERSION }}-openwrt/" * || true
         rename -v "s/friendlyarm_//" *gz
         echo $md5 >> version.txt
-        echo ${{matrix.target}} >> version.txt     
+        echo ${{matrix.target}} >> version.txt
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        
+
     - name: Deploy imagebuilder to server
       uses: easingthemes/ssh-deploy@main
       with:
@@ -172,15 +172,15 @@ jobs:
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
         REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
         REMOTE_USER: root
-        TARGET: "/www/wwwroot/${{ secrets.REMOTE_HOST }}/op/firmware/${{matrix.target}}/"       
-      
+        TARGET: "/www/wwwroot/${{ secrets.REMOTE_HOST }}/op/firmware/${{matrix.target}}/"
+
     - name: Upload firmware directory
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: ${{ env.date3 }} _${{matrix.target}}
         path: ${{ env.FIRMWARE }}
-        
+
     - name: Set Up Docker Buildx
       uses: docker/setup-buildx-action@master
       if: env.DOCKER_ID && env.DOCKER_PASSWD
@@ -191,7 +191,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_ID }}
         password: ${{ secrets.DOCKER_PASSWD }}
-        
+
     - name: Build and push docker image
       uses: docker/build-push-action@master
       continue-on-error: true
@@ -203,7 +203,7 @@ jobs:
         push: true
         tags: |
           ${{ secrets.DOCKER_ID }}/openwrt-6p:${{matrix.target}}
-          ${{ env.DOCKERTAG }}         
+          ${{ env.DOCKERTAG }}
 
     - name: Upload firmware to cowtransfer
       id: cowtransfer
@@ -259,4 +259,4 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
-        
+
